@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CandidateTest</title>
+    <script src="pixi/pixi.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <script type="text/javascript">
+
+    let app;
+    let score = 0; 
+    
+    let falling = true; 
+    const red = 0xFF0000;
+    const blue = 0xADD8E6;
+    const green = 0x00FF00;
+    const yellow = 0xFFFF00;
+    
+    class FallingLetters extends PIXI.Graphics{
+        constructor(letter="a", color=0xFFFFFF){
+            super();
+            this.x = Math.floor(Math.random()*450);   
+            this.w = Math.floor(Math.random()*100)+60;
+            this.h = this.w;
+            this.y = 10-this.h;
+            this.letter = letter.toUpperCase();
+            this.color = color;
+            this.speed = Math.floor(Math.random()*3) + score/10 + 0.5;
+            this.letterSize = Math.floor(Math.random()*64)+16;
+            this.currentSpeed = this.speed;
+            
+        }    
+        //Přidat barvy pozadí 
+        create(){
+            this.beginFill(this.color); 
+            this.drawRect(this.x,this.y,this.w,this.h);   
+            this.endFill(); 
+            this.text = new PIXI.Text(this.letter,{  
+                fill: 0x000000,   
+                stroke: 'black',
+                trim: true,
+                fontFamily: 'Arial',
+                fontSize: this.letterSize,  
+            });        
+            this.text.x = this.x*2;
+            this.text.y = this.y*2;
+            app.stage.addChild(this);
+            app.stage.addChild(this.text);
+        }           
+        remove(){
+            app.stage.removeChild(this);
+            app.stage.removeChild(this.text);
+            this.speed = 0;
+            this.currentSpeed = 0;        
+        }
+        move(){
+            this.y += this.speed;
+            this.text.y += this.speed;          
+        }
+        check(){
+            if(this.y >= 800){
+                gameOver();  
+            }           
+        }
+    }  
+    window.onload = function()
+    {
+        app = new PIXI.Application({
+            width: 1000,
+            height: 800,
+            backgroundColor: 0xAAAAAA,
+        });
+
+        document.querySelector("#gameDiv").appendChild(app.view);   
+        document.querySelector("#resetButton").addEventListener("click",reset);
+        document.querySelector("#startStopButton").addEventListener("click",startStop);  
+
+        scoreText = new PIXI.Text("Score: "+ score,{
+            fontSize: 36,
+        });
+        scoreText.position.set(5,760);
+        app.stage.addChild(scoreText);
+
+        gameOverText = new PIXI.Text("GAME OVER",{               
+                fill: 0xFFFFFF,                
+                fontFamily: 'Arial',
+                fontSize: 128,  
+        });
+        gameWinText = new PIXI.Text("YOU WIN!",{               
+                fill: 0xFFFFFF,                
+                fontFamily: 'Arial',
+                fontSize: 128,  
+        });
+        gameWinText.position.set(200,300);
+        gameOverText.position.set(100,300);
+        app.ticker.add(gameLoop); 
+        keyPressed();
+        startGame();         
+    }  
+    function reset(){
+        a1.remove();
+        a2.remove();
+        b1.remove();
+        b2.remove();
+        c1.remove();
+        c2.remove();
+        d1.remove();
+        d2.remove();
+        app.ticker.start();
+        score = 0;
+        falling = true;
+        scoreText.text ="Score: " + score;
+        app.stage.removeChild(gameOverText);
+        app.stage.removeChild(gameWinText);
+        startGame();
+    }
+    function startStop(){
+        console.log("Start/Stop");
+        if(falling){
+            app.ticker.stop();
+            falling = false;         
+        }
+        else{
+            app.ticker.start();
+            falling = true;
+        }            
+    }
+    function startGame(){
+        a1 = new FallingLetters("a",red);
+        a1.create();     
+        a2 = new FallingLetters("a",red);
+        a2.create();
+        
+        b1 = new FallingLetters("b",green);
+        b1.create();
+        b2 = new FallingLetters("b",green);
+        b2.create();
+
+        c1 = new FallingLetters("c",blue);
+        c1.create();
+        c2 = new FallingLetters("c",blue);
+        c2.create();
+
+        d1 = new FallingLetters("d",yellow);
+        d1.create();
+        d2 = new FallingLetters("d",yellow);
+        d2.create();
+        /*a1.create();
+        a2.create();*/
+    }
+    function gameOver(){  
+        app.stage.addChild(gameOverText);
+        app.ticker.stop();
+        console.log("Game Over press Reset to continue");   
+    }
+    function checkForGameOver(){
+        a1.check();
+        a2.check();
+        b1.check();
+        b2.check();
+        c1.check();
+        c2.check();
+        d1.check();
+        d2.check();      
+    }   
+    function checkScore(){
+        a1.move();
+        a2.move();
+
+        if(score > 5){
+            b1.move();
+            b2.move();
+        }
+        if(score > 20){
+            c1.move();
+            c2.move();
+        }
+        if(score > 30){
+            d1.move();
+            d2.move();
+        }
+        if(score == 50){
+            winGame();
+        }
+    }
+    function winGame(){
+        console.log("You Win!");
+        app.stage.addChild(gameWinText);
+        app.ticker.stop();
+    }
+    function keyPressed(){
+        const charA = keyboard('a'),
+        charB = keyboard('b'),
+        charC = keyboard('c'),
+        charD = keyboard('d');
+
+        charA.press = () => {
+            
+            if(a1.y > 0 && a2.y > 0 && falling == true){ 
+                score = score + 1;
+                scoreText.text ="Score: " + score;
+
+                a1.remove();
+                a2.remove();         
+                a1 = new FallingLetters("a",red);              
+                a2 = new FallingLetters("a",red);
+                a1.create();
+                a2.create();
+
+            }
+            else{
+                scoreText.text ="Score: " + score;  
+                score = score - 2;
+            }                                             
+        }
+
+        charB.press = () => {         
+            if(b1.y > 0 && b2.y > 0 && falling == true){ 
+                score = score + 1;
+                scoreText.text ="Score: " + score;
+
+                b1.remove();
+                b2.remove();         
+                b1 = new FallingLetters("b",green);              
+                b2 = new FallingLetters("b",green);
+                b1.create();
+                b2.create();
+
+            }
+            else{
+                scoreText.text ="Score: " + score;  
+                score = score - 2;
+            }  
+        }
+
+        charC.press = () => {
+            if(c1.y > 0 && c2.y > 0 && falling == true){ 
+                score = score + 1;
+                scoreText.text ="Score: " + score;
+
+                c1.remove();
+                c2.remove();         
+                c1 = new FallingLetters("c",blue);              
+                c2 = new FallingLetters("c",blue);
+                c1.create();
+                c2.create();
+
+            }
+            else{
+                scoreText.text ="Score: " + score;  
+                score = score - 2;
+            }  
+        }
+
+        charD.press = () => {
+            if(d1.y > 0 && d2.y > 0 && falling == true){ 
+                score = score + 1;
+                scoreText.text ="Score: " + score;
+
+                d1.remove();
+                d2.remove();         
+                d1 = new FallingLetters("d",yellow);              
+                d2 = new FallingLetters("d",yellow);
+                d1.create();
+                d2.create();
+
+            }
+            else{
+                scoreText.text ="Score: " + score;  
+                score = score - 2;
+            }  
+        }
+    }
+    function keyboard(value) {
+        const key = {};
+        key.value = value;
+        key.isDown = false;
+        key.isUp = true;
+        key.press = undefined;
+        key.release = undefined;
+
+  //The downHandler
+        key.downHandler = (event) => {
+            if (event.key === key.value) {
+                if (key.isUp && key.press) {
+                    key.press();
+                }
+            key.isDown = true;
+            key.isUp = false;
+            event.preventDefault();
+            }
+        };
+
+  //The upHandler
+        key.upHandler = (event) => {
+          if (event.key === key.value) {
+            if (key.isDown && key.release) {
+              key.release();
+            }
+            key.isDown = false;
+            key.isUp = true;
+            event.preventDefault();
+          }
+        };
+
+  //Attach event listeners
+        const downListener = key.downHandler.bind(key);
+        const upListener = key.upHandler.bind(key);
+        window.addEventListener("keydown", downListener, false);
+        window.addEventListener("keyup", upListener, false);
+
+    // Detach event listeners
+        key.unsubscribe = () => {
+          window.removeEventListener("keydown", downListener);
+          window.removeEventListener("keyup", upListener);
+        };
+  
+  return key;
+    }
+    function gameLoop(delta){ 
+        checkForGameOver();   
+        checkScore();
+        
+    }    
+    </script>
+</head>
+<body>
+    
+        <div id="gameDiv"></div>
+    <div class="btn">
+        <button id="resetButton">Reset</button>
+        <button id="startStopButton">Start/Stop</button>    
+    </div>
+</body>
+</html>
